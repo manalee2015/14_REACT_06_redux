@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Enhanced Redux Example with Objects</title>
+		<script
+			crossorigin
+			src="https://unpkg.com/react@18/umd/react.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/@babel/standalone/babel.min.js"
+		></script>
+		<script src="https://unpkg.com/redux@4.2.0/dist/redux.js"></script>
+		<script src="https://unpkg.com/react-redux@8.0.4/dist/react-redux.js"></script>
+		<script src="https://unpkg.com/redux-actions@2.6.5/dist/redux-actions.js"></script>
+	</head>
+	<body>
+		<div id="root"></div>
+
+		<script type="text/babel">
+
+			// -------------------- Custom Middleware --------------------
+			const consoleLoggingMiddleware = store => next => action => {
+
+				console.log('---------------- 넌 못지나가 ----------------');
+				console.log('미들웨어 action', action);
+				console.log('미들웨어 next', next);
+				console.log('미들웨어 store', store);
+
+				/* 액션 객체를 콘솔에 출력하는 로깅 기능 구현 */
+				console.log('[info] action', action);
+
+				/* next() 함수를 호출해 해당 미들웨어가 처리한 액션을 다음 미들웨어 또는 리듀서로 전달 */
+				const result = next(action);
+				console.log('미들웨어 result', result);
+
+				/* 
+				next() 함수에서 반환된 결과를 해당 미들웨어의 반환값으로 그대로 사용(bypass)
+				따라서 해당 result는 state 결과값(= 다음 상태)이 된다.
+				*/
+				console.log('---------------- 이제 놔줄게 ----------------');
+				return result;
+			};
+
+			// ------ Modules(initial state + reducers + actions) --------
+			const { createActions, handleActions } = ReduxActions;
+
+			// initial state
+			const initState = 25;
+
+			// actions type
+			const DECREASE = 'count/DECREASE';
+			const INCREASE = 'count/INCREASE';
+
+			// actions creators
+			const { count: { decrease, increase } } = createActions(
+				{
+					[DECREASE]: (amount = 1) => {
+						console.log('액션 생성자:', DECREASE, '할게요~');
+						return {decreaseValue: amount};
+					 },
+					[INCREASE]: (amount = 1) => {
+						console.log('액션 생성자:', INCREASE, '할게요~');
+						return { increaseValue: amount };
+					},
+				}
+			);
+
+			// reducers
+			const reducer = handleActions(
+				{
+					[DECREASE]: (state, { payload: { decreaseValue } }) => {
+						console.log('리듀서 동작합니다~', DECREASE);
+						return state - decreaseValue;
+					},
+					[INCREASE]: (state, { payload: { increaseValue } }) => {
+						console.log('리듀서 동작합니다~', INCREASE);
+						return state + increaseValue;
+					}
+				},
+				initState
+			);
+
+			// -------------------- React Component(UI) --------------------
+			const { useSelector, useDispatch } = ReactRedux;
+			function App() {
+
+				console.log('<App> 컴포넌트 동작합니다~');
+
+				const count = useSelector((state) => state);
+				const dispatch = useDispatch();
+				console.log('store에서 가져온 state count:', count);
+				console.log('새 심부름꾼 dispatch:', dispatch);
+
+				const decreaseCount = () => {
+					console.log('이리온 심부름꾼 dispatch decrease() 하러 출발');
+					dispatch(decrease());
+				};
+				const increaseCount = () => {
+					console.log('이리온 심부름꾼 dispatch increase() 하러 출발');
+					dispatch(increase());
+				};
+
+				return (
+					<>
+						<h1>Count: {count}</h1>
+						<button onClick={decreaseCount}>1 감소</button>
+						<button onClick={increaseCount}>1 증가</button>
+					</>
+				)
+			}
+
+			// -------------------- Redux Store ----------------------------
+			const { createStore, applyMiddleware } = Redux;
+			const store = createStore(reducer, applyMiddleware(consoleLoggingMiddleware));
+
+			// -------------------- React-Redux Provider --------------------
+			const { Provider } = ReactRedux;
+
+
+			// Render the app
+			ReactDOM.createRoot(document.getElementById("root")).render(
+				<Provider store={store}>
+					<App />
+				</Provider>
+			);
+		</script>
+	</body>
+</html>

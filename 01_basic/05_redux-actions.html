@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Enhanced Redux Example with Objects</title>
+		<script
+			crossorigin
+			src="https://unpkg.com/react@18/umd/react.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/@babel/standalone/babel.min.js"
+		></script>
+		<script src="https://unpkg.com/redux@4.2.0/dist/redux.js"></script>
+		<script src="https://unpkg.com/react-redux@8.0.4/dist/react-redux.js"></script>
+		<script src="https://unpkg.com/redux-actions@2.6.5/dist/redux-actions.js"></script>
+	</head>
+	<body>
+		<div id="root"></div>
+
+		<script type="text/babel">
+			const { Provider, useSelector, useDispatch } = ReactRedux;
+			const { createStore } = Redux;
+			const { createAction, createActions, handleActions } = ReduxActions;
+
+			const initState = 24;
+
+			// ================== 1. actions ==================
+			const INCREASE = "count/INCREASE";
+			const DECREASE = "count/DECREASE";
+
+			// ================== 2. action creators ==================
+			// 2-1. createAction을 사용한 액션 생성자
+			// const increase = createAction(INCREASE, (amount = 1) => ({
+			// 	increaseValue: amount,
+			// }));
+			// console.log(increase);
+			// const decrease = createAction(DECREASE, (amount = 1) => ({
+			// 	decreaseValue: amount,
+			// }));
+
+			// 2-2. createActions를 사용한 액션 생성자
+			// 대괄호를 써주는 이유는 Computed Property Name 때문
+			const { count: { increase, decrease } } = createActions({
+				[INCREASE]: (amount = 1) => ({ increaseValue: amount }),
+				[DECREASE]: (amount = 1) => ({ decreaseValue: amount }),
+			});
+			// console.log(count);
+			console.log(increase);
+			console.log(decrease);
+
+			// ================== 3. reducer ==================
+			// 3. handleActions를 사용한 리듀서 함수
+			const reducer = handleActions(
+				{
+					[INCREASE]: (state, { payload: { increaseValue } }) => {
+						return state + increaseValue;
+					},
+					[DECREASE]: (state, { payload: { decreaseValue } }) => {
+						return state - decreaseValue;
+					},
+				},
+				initState
+			);
+
+			function App() {
+				const count = useSelector((state) => state);
+				const dispatch = useDispatch();
+
+				const increaseCount = () => dispatch(increase());
+				const decreaseCount = () => dispatch(decrease());
+
+				return (
+					<>
+						<h1>Count: {count}</h1>
+						<button onClick={increaseCount}>+ 1</button>
+						<button onClick={decreaseCount}>- 1</button>
+					</>
+				);
+			}
+
+			const store = createStore(
+				reducer,
+				window.__REDUX_DEVTOOLS_EXTENSION__ &&
+					window.__REDUX_DEVTOOLS_EXTENSION__()
+			);
+
+			// Render the app
+			ReactDOM.createRoot(document.getElementById("root")).render(
+				<Provider store={store}>
+					<App />
+				</Provider>
+			);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script
+			crossorigin
+			src="https://unpkg.com/react@18/umd/react.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+		></script>
+		<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+		<title>Document</title>
+	</head>
+
+	<body>
+		<div id="root"></div>
+
+		<script type="text/babel">
+			/* 
+        useReducer 개념 복습
+
+        - reducer : 상태(state)와 액션(action)을 받아 새로운 상태를 반환하는 순수 함수
+        - dispatcher : 액션 객체를 리듀서로 전달하는 함수로, 상태를 업데이트 시키는 역할을 컴포넌트 대신 리듀서에게 전달함
+        - action : 상태를 변경하기 위한 정보를 담고있는 객체로, 주로 type(동사형, 필수)과 payload(명사형, 선택)로 구성됨
+        */
+
+			/* 
+        액션 객체와 디스패처를 포함한 useReducer Hook을 React 객체에서 가져온다.
+        참고로, 해당 예제에서 액션은 joomon 프로퍼티를 가지는 객체이며 dispatcher는 updateCount 함수이다.
+        */
+
+			const { useReducer, useEffect } = React;
+
+			/* 
+        reducer 함수는 dispatcher를 통해 컴포넌트로부터 상태(state)와 액션(action)을 전달 받아
+        조건 판단 후, 새로운 상태(여기선 객체)를 반환한다.
+        (default 케이스는 기존 상태 객체를 그대로 반환. 즉 아무 조작도 하지 않은 상태 객체임)
+        이 때, 반환되는 상태 객체 또한 dispatcher를 통해 컴포넌트에 다시 전달되고,
+        컴포넌트는 dispatcher가 가져온 상태 객체로 상태를 업데이트한다.
+        */
+			function reducer(state, action) {
+				console.log("reducer 함수 호출됨...");
+				console.log("state : ", state);
+				console.log("action : ", action);
+
+				/*
+                참고로 액션 객체는 일반적으로 다음과 같이 생겼다:
+                    {
+                    type: 'ACTION_TYPE',
+                    payload: {
+                        key1: 'value1',
+                        key2: 'value2',
+                        ...
+                    }
+                    }
+                */
+				switch (action.joomon) {
+					case "DECREMENT":
+						return { value: state.value - 1 };
+					case "INCREMENT":
+						return { value: state.value + 1 };
+					default:
+						return state;
+				}
+			}
+
+            /* 
+            이 예제에서 Count 컴포넌트는 본인이 직접 state를 관리하지 않고
+            dispatcher를 통해 reducer 함수에 상태와 액션을 전달하면 상태를 변경하고 관리한다.
+            */
+			function Counter() {
+
+				const [count, updateCount] = useReducer(reducer, { value: 0 });
+
+				useEffect(() => {
+					console.log("count 변경됨", count);
+				}, [count]);
+
+				return (
+					<>
+						<h1>useReducer 및 reducer 함수 복습</h1>
+						<hr />
+						<h3>Count : {count.value}</h3>
+                        {/* 
+                            버튼 클릭 시, dispatcher 함수인 updateCount를 통해 reducer 함수에 액션 객체를 전달하고
+                            액션에 따라 reducer 함수는 상태를 변경한 후, 그 변경된 상태를 반환한다.
+                        */}
+						<button
+							onClick={() => updateCount({ joomon: "INCREMENT" })}
+						>
+							+ 1
+						</button>
+						<button
+							onClick={() => updateCount({ joomon: "DECREMENT" })}
+						>
+							- 1
+						</button>
+					</>
+				);
+			}
+
+			ReactDOM.createRoot(document.getElementById("root")).render(
+				<Counter />
+			);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script
+			crossorigin
+			src="https://unpkg.com/react@18/umd/react.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+		></script>
+		<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+		<script src="https://unpkg.com/redux@4.2.1/dist/redux.js"></script>
+		<script src="https://unpkg.com/react-redux@8.1.3/dist/react-redux.js"></script>
+		<title>Document</title>
+	</head>
+
+	<body>
+		<div id="root"></div>
+
+		<script type="text/babel">
+			/* 
+            관리 할 state가 복잡하거나 reducer 함수로 관리해야 할 성격이 다른 경우,
+            각각의 state들을 관리하는 reducer 함수를 한 군데에 묶어 관리 할 combineReducers를 사용 가능하다.
+            공식 문서: https://redux.js.org/api/combinereducers/
+            */
+			const { useSelector, useDispatch, Provider } = ReactRedux;
+			const { combineReducers, createStore } = Redux;
+
+			/* Store가 관리할 세 종류의 state들과 초기값 설정 */
+			const countInitState = {
+				currentCount: 24,
+			};
+			const activationInitState = {
+				isActivated: false,
+			};
+			const userInitState = {
+				name: "",
+				email: "",
+				phone: "",
+			};
+
+			/*
+            Redux의 combineReducers 함수를 사용하여 여러개의 리듀서를 하나로 합쳐 관리할 수 있다.
+            combineReducers는 각각의 state 조각을 관리하는 여러 리듀서를 하나의 큰 리듀서로 통합한다.
+            이 하나의 큰 리듀서는 애플리케이션의 전체 상태 객체를 관리하게 된다.
+
+            아래 포인트들을 염두에 두고 사용해야 한다.
+            - 각 리듀서는 독립적으로 특정 부분의 state를 관리한다.
+            - 리듀서는 '순수 함수'로, 이전 상태와 액션 객체를 받아 새로운 상태를 반환해야 한다.
+            - state는 '불변성'을 유지해야 하므로, 기존 상태를 수정하지 않고 새로운 상태 객체를 생성하여 반환한다.
+            - action.type에 따라 switch 문을 사용하여 각 액션을 처리하고, 해당하는 액션에 맞는 새로운 상태를 반환한다.
+            - combineReducers를 통해 합쳐진 리듀서는 각각의 리듀서 함수를 호출하고, 각 리듀서는 관리하는 상태 부분에만 반응한다.
+
+            리듀서 함수의 state 변경 여부는 주소값 일치 여부를 확인하는 방법으로 성능을 개선시켰기 때문에,
+            객체 내부의 값만 변경해서 주소값은 동일하게 되면 state의 변화가 없는 것으로 감지하게 된다.
+            따라서 Redux의 리듀서에서 상태 변화를 감지하기 위해 불변성을 유지해야 하며, 객체 내부 값을 변경하는 대신
+            새로운 '객체를 생성해 반환'해야 한다.
+            이는 상태 객체의 주소값 변경을 통해 성능을 개선하고 상태 변화를 정확하게 감지하기 위해서다.
+            즉, 상태가 변화할 때마다 새로운 주소값을 가질 객체를 생성함으로써, Redux는 상태의 변경을 효과적으로 감지하고 관리할 수 있다.
+            */
+			const rootReducer = combineReducers({
+				countReducer: (state = countInitState, action) => {
+					console.log("1. countReducer 호출됨...");
+					const { type, payload } = action;
+					switch (type) {
+						case "DECREASE":
+							return {
+								currentCount:
+									state.currentCount - payload.decreaseValue,
+							};
+						case "INCREASE":
+							return {
+								currentCount:
+									state.currentCount + payload.increaseValue,
+							};
+						default:
+							return state;
+					}
+				},
+				activationReducer: (state = activationInitState, action) => {
+					console.log("2. activationReducer 호출됨...");
+					const { type } = action;
+
+					switch (type) {
+						case "TOGGLE":
+							return {
+								isActivated: !state.isActivated,
+							};
+						default:
+							return state;
+					}
+				},
+				userReducer: (state = userInitState, action) => {
+					console.log("3. userReducer 호출됨...");
+					const { type, payload } = action;
+
+					switch (type) {
+						case "UPDATE":
+							return {
+								...state,
+								[payload.name]: payload.value,
+							};
+						default:
+							return state;
+					}
+				},
+			});
+
+			// Redux DevTools 확장프로그램 설치 예정.
+            const store = createStore(
+				rootReducer,
+				window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+			);
+
+			function App() {
+				const { currentCount } = useSelector(
+					(state) => state.countReducer
+				);
+				const { isActivated } = useSelector(
+					(state) => state.activationReducer
+				);
+				const { name, email, phone } = useSelector(
+					(state) => state.userReducer
+				);
+
+				// console.log(currentCount);
+				// console.log(isActivated);
+				// console.log(user);
+
+				/* 
+                useDispatch 훅을 호출해서 반환받는 dispatch로 리듀서에 action을 넘기고 state를 수정한다.
+                이 때, 하나의 dispatch를 호출해도 combineReducers에 있는 모든 리듀서 함수들이 호출 된다.
+                (리듀서가 호출되는 시점 = dispatch 함수를 통해 어떤 액션(action)이 스토어(store)로 전송될 때)
+                이유는 Redux가 스토어의 상태를 일관성 있게 유지하기 위해 모든 리듀서를 실행하여
+                전체 상태 트리를 업데이트하기 때문이다.
+                각 리듀서는 자신이 관리하는 상태만을 처리하며, 관련 없는 액션 타입에 대해서는 기존 상태를 그대로 반환한다.
+                */
+				const dispatch = useDispatch();
+
+				const decreaseCount = () => {
+					dispatch({
+						type: "DECREASE",
+						payload: {
+							decreaseValue: 1,
+						},
+					});
+				};
+				const increaseCount = () => {
+					dispatch({
+						type: "INCREASE",
+						payload: {
+							increaseValue: 1,
+						},
+					});
+				};
+
+				const toggleActivation = () => {
+					dispatch({
+						type: "TOGGLE",
+					});
+				};
+
+				const updateUser = (e) => {
+					dispatch({
+						type: "UPDATE",
+						payload: {
+							name: e.target.name,
+							value: e.target.value,
+						},
+					});
+				};
+
+				return (
+					<>
+						<h1>세 종류의 state 변수 관리해보기</h1>
+						<hr />
+						<h3>1. currentCount: {currentCount}</h3>
+						<button onClick={decreaseCount}>-1</button>
+						<button onClick={increaseCount}>+1</button>
+						<hr />
+
+						<h3>2. isActivated: {isActivated.toString()}</h3>
+						<button onClick={toggleActivation}>toggle</button>
+						<hr />
+
+						<h3>3. input control</h3>
+						<input
+							type="text"
+							name="name"
+							placeholder="이름을 입력해주세요"
+							onChange={updateUser}
+						/>
+						<input
+							type="text"
+							name="email"
+							placeholder="이메일을 입력해주세요"
+							onChange={updateUser}
+						/>
+						<input
+							type="text"
+							name="phone"
+							placeholder="전화번호를 입력해주세요"
+							onChange={updateUser}
+						/>
+						<p>name: {name}</p>
+						<p>email: {email}</p>
+						<p>phone: {phone}</p>
+					</>
+				);
+			}
+
+			ReactDOM.createRoot(document.getElementById("root")).render(
+				<Provider store={store}>
+					<App />
+				</Provider>
+			);
+		</script>
+	</body>
+</html>

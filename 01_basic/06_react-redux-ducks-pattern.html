@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Enhanced Redux Example with Objects</title>
+		<script
+			crossorigin
+			src="https://unpkg.com/react@18/umd/react.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+		></script>
+		<script
+			crossorigin
+			src="https://unpkg.com/@babel/standalone/babel.min.js"
+		></script>
+		<script src="https://unpkg.com/redux@4.2.0/dist/redux.js"></script>
+		<script src="https://unpkg.com/react-redux@8.0.4/dist/react-redux.js"></script>
+		<script src="https://unpkg.com/redux-actions@2.6.5/dist/redux-actions.js"></script>
+	</head>
+	<body>
+		<div id="root"></div>
+
+		<script type="text/babel">
+			const { Provider, useSelector, useDispatch } = ReactRedux;
+			const { combineReducers, createStore } = Redux;
+			const { createActions, handleActions } = ReduxActions;
+
+			// Initial states as objects
+			const initialCountState = { currentCount: 10 };
+			const initialActivityState = { isActivity: false };
+			const initialUserState = { name: "", email: "", phone: "" };
+
+			// Actions using Ducks pattern
+			const { count, activity, user } = createActions(
+				{
+					COUNT: {
+						INCREMENT: (amount) => ({ amount }),
+						DECREMENT: (amount) => ({ amount }),
+					},
+					ACTIVITY: {
+						TOGGLE: undefined,
+					},
+					USER: {
+						UPDATE: (field, value) => ({ field, value }),
+					},
+				},
+				{
+					prefix: "myApp", // Optional: add a prefix to all action types
+				}
+			);
+
+			// Reducers
+			const countReducer = handleActions(
+				{
+					[count.increment]: (state, { payload: { amount } }) => ({
+						currentCount: state.currentCount + amount,
+					}),
+					[count.decrement]: (state, { payload: { amount } }) => ({
+						currentCount: state.currentCount - amount,
+					}),
+				},
+				initialCountState
+			);
+
+			const activityReducer = handleActions(
+				{
+					[activity.toggle]: (state) => ({
+						isActivity: !state.isActivity,
+					}),
+				},
+				initialActivityState
+			);
+
+			const userReducer = handleActions(
+				{
+					[user.update]: (state, { payload: { field, value } }) => ({
+						...state,
+						[field]: value,
+					}),
+				},
+				initialUserState
+			);
+
+			// Store configuration
+			const rootReducer = combineReducers({
+				count: countReducer,
+				activity: activityReducer,
+				user: userReducer,
+			});
+			const store = createStore(
+                rootReducer,
+				window.__REDUX_DEVTOOLS_EXTENSION__ &&
+					window.__REDUX_DEVTOOLS_EXTENSION__()
+			);
+
+			// React component
+			function App() {
+				const { currentCount } = useSelector((state) => state.count);
+				const { isActivity } = useSelector((state) => state.activity);
+				const { name, email, phone } = useSelector(
+					(state) => state.user
+				);
+				const dispatch = useDispatch();
+
+				const handleIncrement = () => dispatch(count.increment(1));
+				const handleDecrement = () => dispatch(count.decrement(1));
+				const toggleActivity = () => dispatch(activity.toggle());
+				const handleUserUpdate = (field, value) =>
+					dispatch(user.update(field, value));
+
+				return (
+					<>
+						<h1>Redux Actions with Object States</h1>
+						<div>
+							<h2>Count: {currentCount}</h2>
+							<button onClick={handleIncrement}>Increase</button>
+							<button onClick={handleDecrement}>Decrease</button>
+						</div>
+						<div>
+							<h2>
+								Activity: {isActivity ? "Active" : "Inactive"}
+							</h2>
+							<button onClick={toggleActivity}>
+								Toggle Activity
+							</button>
+						</div>
+						<div>
+							<h2>User Details</h2>
+							<input
+								type="text"
+								value={name}
+								onChange={(e) =>
+									handleUserUpdate("name", e.target.value)
+								}
+							/>
+							<input
+								type="email"
+								value={email}
+								onChange={(e) =>
+									handleUserUpdate("email", e.target.value)
+								}
+							/>
+							<input
+								type="tel"
+								value={phone}
+								onChange={(e) =>
+									handleUserUpdate("phone", e.target.value)
+								}
+							/>
+						</div>
+					</>
+				);
+			}
+
+			// Render the app
+			ReactDOM.createRoot(document.getElementById("root")).render(
+				<Provider store={store}>
+					<App />
+				</Provider>
+			);
+		</script>
+	</body>
+</html>
