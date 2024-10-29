@@ -10,6 +10,17 @@ function MenuDetail() {
 	const isAuthorized = !!localStorage.getItem('isLogin');
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
+	/* 
+	useParams: The useParams hook is a part of the React Router library, which is used for handling 
+	routing in React applications. It allows you to access the parameters of the current route.
+	Explanation of useParams:
+		Purpose: useParams is used to extract the dynamic parameters from the URL. These parameters
+			are defined in the route path and can be accessed within the compoenent that is rendered by that route.
+		Usage: When you define a route with a parameter, such as /menu/:id, the :id part is a dynamic segment.
+			You can use useParams to access this id value inside the componenet that is rendered for this route.
+		Return value: useParams returns an object where the keys are the parameter names and the values are the
+			parameter values from the URL.
+	*/
 	const { id } = useParams();
 	const result = useSelector(state => state.menuReducer);
 

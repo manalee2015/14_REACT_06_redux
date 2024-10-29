@@ -8,6 +8,38 @@ import { resetLoginUser } from "../../modules/UserModule";
 function LoginForm() {
 
 	/* 
+	useNavigate:
+		Def: The useNavigate hook is a part of the React Router library, which is used for navigation in React
+		applications. It provides a programmatic way to navigate between different routes in your application.
+		Purpose: useNavigate is used to navigate to different routes programmatically. It replaces the older
+		useHistory hook from previous versions of React Router.
+		Usage: It returns a function that can be called with a path to navigate to that route. You can also pass
+		options to control the navigation behavior, such as replacing the current entry in the history stack.
+		Basic Navigation:
+			navigate('/path') 
+			- Navigates to the specified path.
+		Navigation with Options:
+			navigate('/path', { replace: true }) 
+			- This option replaces the current entry in the history stack with the new location, preventing
+			users from navigating back to the previous page using the browser's back button.
+	*/
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
+	/* 
+	The useSelector hook is used to extract data from the Redux store data. In the code,
+	useSelector(state => state.userReducer) is accessing the part of the Redux state managed by userReducer.
+	What is the Return Value?
+		The return value of useSelector(state => state.userReducer) is the current state managed by userReducer.
+		Based on the userReducer code, the state can be:
+			An object representing the user data if the login is successful.
+			An object with a message property set to 'LOGIN_FAIL' if the login fails.
+	Explanation:
+		Successful Login: If the login is successful, res will be user object, and this will be the state returned by the reducer.
+		Failed Login: If the login fails, res will be set to { message: 'LOGIN_FAIL' }, and this will be the state returned by the reducer.
+	Thus, result in the code will reflect the current state of the user login process, which is used to determine the next steps in the useEffect hook.
+	*/
+	const result = useSelector(state => state.userReducer);
+	/* 
 	localStorage:
 		Def: 
 			localStorage is a web storage API provided by the browser that allows you to sotre key-value pairs
@@ -26,22 +58,6 @@ function LoginForm() {
 			It's synchronous, so avoid using it for storing large amounts of data.
 			Use JSON methods for storing and retrieving complex data structures like objects or arrays.
 	*/
-	const navigate = useNavigate();
-	const dispatch = useDispatch();
-	/* 
-	The useSelector hook is used to extract data from the Redux store data. In the code,
-	useSelector(state => state.userReducer) is accessing the part of the Redux state managed by userReducer.
-	What is the Return Value?
-		The return value of useSelector(state => state.userReducer) is the current state managed by userReducer.
-		Based on the userReducer code, the state can be:
-			An object representing the user data if the login is successful.
-			An object with a message property set to 'LOGIN_FAIL' if the login fails.
-	Explanation:
-		Successful Login: If the login is successful, res will be user object, and this will be the state returned by the reducer.
-		Failed Login: If the login fails, res will be set to { message: 'LOGIN_FAIL' }, and this will be the state returned by the reducer.
-	Thus, result in the code will reflect the current state of the user login process, which is used to determine the next steps in the useEffect hook.
-	*/
-	const result = useSelector(state => state.userReducer);
 	const isAuthorized = !!localStorage.getItem('isLogin');
 
 	/* input 태그 입력 값 state 관리 */
@@ -75,6 +91,21 @@ function LoginForm() {
 	/* 로그인 요청 후 성공 or 실패 동작 */
 	useEffect(
 		() => {
+			/* 
+			The use of result?.message instead of result.message is a feature of JavaScript called "optional chaining."
+			This feature is used to safely access deeply nested properties of an object without having to explicitly check
+			if each reference in the chain is null or undefined.
+			Why Use result?.message?
+				1. Safety: If result is null or undefined, attempting to access result.message would throw a runtime error.
+				   Using result?.message prevents this error by returning undefined instead of attempting to access message
+				   on a non-existent object.
+				2. Conciseness: It reduces the need for additional checks. Without optional chaining, you would need to write
+				   something like result && result.message to ensure that result is not null or undefined before accessing message.
+				3. Readability: It makes the code cleaner and easier to read by reducing the amount of boilerplate code needed for null checks.
+			Summary:
+				This usage ensures that if result is null or undefined, the code will not throw an error when trying to access message.
+				Instead, it will simply evaluate to undefined, allowing the code to handle the absence of message gracefully.
+			*/
 			if (result?.message) {
 				alert('아이디와 비밀번호를 확인해주세요');
 				setLoginInfo(
